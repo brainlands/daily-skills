@@ -1,233 +1,207 @@
 ---
 name: proxy-intranet-bypass
-description: '帮助用户配置代理软件，让公司内网流量直连、不走代理节点，解决「开了代理就上不了内网」的问题。支持 Clash/FlClash/Clash Verge/Shadowrocket/Quantumult X/V2RayN 等主流代理工具。当用户提到"代理内网"、"内网直连"、"代理 bypass"、"内网不通"、"代理和公司内网冲突"等场景时触发。'
+description: "Configure proxy clients so company intranet, private domains, Git servers, internal docs, OA, APIs, and RFC1918 LAN traffic go DIRECT instead of through proxy nodes. Use when users report opening Clash, FlClash, Clash Verge, Clash Verge Rev, Shadowrocket, Quantumult X, V2RayN, or similar tools makes intranet unavailable; keywords include 开代理访问不了内网, 代理内网, 内网直连, bypass, DIRECT, fake-ip-filter, nameserver-policy, rules, TUN, fake-ip, 28.x.x.x, 198.18.x.x."
 ---
 
 # 代理内网直通配置助手
 
-帮助用户一键配置代理软件的「内网直通」规则，解决开了代理后公司内网（Git、文档系统、内部 API）无法访问的问题。
+帮助用户解决“开代理后访问不了公司内网”的问题。目标是让内网域名、内网 IP、公司 Git/文档/OA/API 直连，不走代理节点。
 
-## 核心原理（三板斧）
+## Core Pattern
 
-不管用什么代理软件，配置本质只改三处：
+优先推荐“覆写/Override”方案，避免订阅更新后丢配置。只有在用户明确要直接改配置文件时，才指导修改 profile 源文件。
 
-| 序号 | 改什么 | 为什么 |
-|------|--------|--------|
-| 1 | **fake-ip-filter** | 防止内网域名被分配假 IP（28.x.x.x），导致根本连不上 |
-| 2 | **nameserver-policy** | 让内网域名走国内 DNS，拿到真实 IP |
-| 3 | **rules**（最前面加 DIRECT） | 让内网流量直连，不走代理节点 |
+核心只处理三类配置：
 
-## 执行流程
+| 配置 | 目的 |
+| --- | --- |
+| `rules` / 分流规则 | 把内网域名和私网 IP 放在最前面并走 `DIRECT` |
+| `fake-ip-filter` | 避免内网域名被分配 `28.x.x.x` 或 `198.18.x.x` 假 IP |
+| `nameserver-policy` / Host | 让内网域名使用可解析到真实地址的 DNS |
 
-### Step 1：收集信息
+## Workflow
 
-向用户确认以下信息（已提供则跳过）：
+1. 先收集缺失信息：代理软件、内网域名或域名后缀、是否使用 TUN/fake-ip、操作系统。不要询问用户已经给出的信息。
+2. 如果用户只说“内网打不开”，先给通用 DIRECT 规则和排查命令；如果给出具体软件，输出对应软件配置。
+3. 对 Clash 系工具优先给覆写方案；提醒用户规则必须放在现有规则前面。
+4. 域名规则用后缀时去掉开头的点，例如 `git.example.com` 可用 `DOMAIN-SUFFIX,example.com,DIRECT`；具体主机名可用 `DOMAIN,git.example.com,DIRECT`。
+5. 私网 IP 规则默认包含：
+   - `10.0.0.0/8`
+   - `172.16.0.0/12`
+   - `192.168.0.0/16`
+6. 让用户修改前备份配置，修改后保存、启用覆写并重启代理客户端。
+7. 最后给验证命令和判断标准。
 
-1. **代理软件**：Clash / FlClash / Clash Verge / Clash Verge Rev / Shadowrocket / Quantumult X / V2RayN / Clash for Windows
-2. **公司内网域名**：例如 `your-company.com`、`your-internal.cn`（支持多个）
-3. **是否开了 TUN 模式 / fake-ip 模式**：如果不确定，默认按「开了」处理
+## Clash / FlClash / Clash Verge
 
-### Step 2：根据代理软件输出对应配置
+### 通用 YAML 模板
 
----
-
-#### Clash 系（直接修改 profile 文件）
-
-**找到配置文件**（不是运行时 `config.yaml`，是 `profiles/` 下的源文件）：
-
-| 软件 | 路径 |
-|------|------|
-| FlClash (macOS) | `~/Library/Application Support/com.follow.clash/profiles/xxx.yaml` |
-| Clash Verge (macOS) | `~/.config/clash-verge/profiles/xxx.yaml` |
-| Clash Verge Rev (macOS) | `~/.config/clash-verge-rev/profiles/xxx.yaml` |
-| Clash (Windows) | `C:\Users\<username>\.config\clash\profiles\xxx.yaml` |
-
-**三处修改：**
+把规则放到 `rules` 最前面：
 
 ```yaml
-# 1️⃣ fake-ip-filter 追加内网域名（在数组末尾 ] 前追加）
-fake-ip-filter:
-  # ... 原有内容保留 ...
-  - '+.your-company.com'
-  - '+.your-internal.cn'
-
-# 2️⃣ nameserver-policy 追加内网 DNS
-nameserver-policy:
-  '+.your-company.com': ['223.5.5.5', '119.29.29.29']
-  '+.your-internal.cn': ['223.5.5.5', '119.29.29.29']
-
-# 3️⃣ rules 最前面加直连规则（必须在所有其他规则之前！）
 rules:
-  - 'DOMAIN-SUFFIX,your-company.com,DIRECT'
-  - 'DOMAIN-SUFFIX,your-internal.cn,DIRECT'
-  - 'IP-CIDR,10.0.0.0/8,DIRECT,no-resolve'
-  - 'IP-CIDR,172.16.0.0/12,DIRECT,no-resolve'
-  - 'IP-CIDR,192.168.0.0/16,DIRECT,no-resolve'
-  # ... 原有规则保留 ...
+  - DOMAIN-SUFFIX,your-company.com,DIRECT
+  - DOMAIN,git.your-company.com,DIRECT
+  - IP-CIDR,10.0.0.0/8,DIRECT,no-resolve
+  - IP-CIDR,172.16.0.0/12,DIRECT,no-resolve
+  - IP-CIDR,192.168.0.0/16,DIRECT,no-resolve
 ```
 
----
+如果启用了 fake-ip，追加：
 
-#### FlClash 覆写脚本（推荐，订阅更新不覆盖）
+```yaml
+dns:
+  fake-ip-filter:
+    - "+.your-company.com"
+    - "git.your-company.com"
+  nameserver-policy:
+    "+.your-company.com":
+      - 223.5.5.5
+      - 119.29.29.29
+```
 
-步骤：配置 → 当前 profile 右键 → 更多 → 覆写 → 切换到「脚本」模式 → 新建脚本：
+### FlClash 覆写脚本
+
+路径：配置 -> 当前 profile -> 更多 -> 覆写 -> 脚本模式。
 
 ```javascript
 function main(config) {
-  // 1️⃣ rules 最前面插入内网直连规则
+  config.rules = config.rules || []
   config.rules.unshift(
     'DOMAIN-SUFFIX,your-company.com,DIRECT',
-    'DOMAIN-SUFFIX,your-internal.cn,DIRECT',
+    'DOMAIN,git.your-company.com,DIRECT',
     'IP-CIDR,10.0.0.0/8,DIRECT,no-resolve',
     'IP-CIDR,172.16.0.0/12,DIRECT,no-resolve',
     'IP-CIDR,192.168.0.0/16,DIRECT,no-resolve'
   )
 
-  // 2️⃣ fake-ip-filter 追加内网域名
-  if (config.dns && config.dns['fake-ip-filter']) {
-    config.dns['fake-ip-filter'].push(
-      '+.your-company.com',
-      '+.your-internal.cn'
-    )
-  }
+  config.dns = config.dns || {}
+  config.dns['fake-ip-filter'] = config.dns['fake-ip-filter'] || []
+  config.dns['fake-ip-filter'].push(
+    '+.your-company.com',
+    'git.your-company.com'
+  )
 
-  // 3️⃣ nameserver-policy 追加内网 DNS
-  if (config.dns) {
-    if (!config.dns['nameserver-policy']) {
-      config.dns['nameserver-policy'] = {}
-    }
-    config.dns['nameserver-policy']['+.your-company.com'] = ['223.5.5.5', '119.29.29.29']
-    config.dns['nameserver-policy']['+.your-internal.cn'] = ['223.5.5.5', '119.29.29.29']
-  }
+  config.dns['nameserver-policy'] = config.dns['nameserver-policy'] || {}
+  config.dns['nameserver-policy']['+.your-company.com'] = ['223.5.5.5', '119.29.29.29']
 
   return config
 }
 ```
 
-> ⚠️ FlClash 必须用 `function main(config)` 格式，不支持 `module.exports`！
+FlClash 使用 `function main(config)`，不要写 `module.exports`。
 
-保存后：勾选脚本（空心○ → 实心●）→ 确认「脚本」模式 → 重启 FlClash。
+### Clash Verge / Clash Verge Rev 覆写
 
----
-
-#### Clash Verge / Clash Verge Rev 覆写（推荐）
-
-覆写 → 标准模式 → 在对应区域添加：
+标准模式中添加：
 
 ```yaml
-# Rules 区域 → prepend-rules
 prepend-rules:
   - DOMAIN-SUFFIX,your-company.com,DIRECT
-  - DOMAIN-SUFFIX,your-internal.cn,DIRECT
+  - DOMAIN,git.your-company.com,DIRECT
   - IP-CIDR,10.0.0.0/8,DIRECT,no-resolve
   - IP-CIDR,172.16.0.0/12,DIRECT,no-resolve
   - IP-CIDR,192.168.0.0/16,DIRECT,no-resolve
 
-# DNS 区域 → fake-ip-filter 末尾追加
 fake-ip-filter:
-  - '+.your-company.com'
-  - '+.your-internal.cn'
+  - "+.your-company.com"
+  - "git.your-company.com"
 ```
 
----
+### 直接修改 profile 文件
 
-#### Shadowrocket（iOS 小火箭）
+只在用户不能使用覆写时建议直接修改。提醒用户找 `profiles/` 下的订阅源文件，不要改运行时 `config.yaml`。
 
-配置 → 当前配置 ⓘ → 编辑纯文本 → `[Rule]` 最前面加：
+常见路径：
 
-```
+| 软件 | macOS 路径 |
+| --- | --- |
+| FlClash | `~/Library/Application Support/com.follow.clash/profiles/*.yaml` |
+| Clash Verge | `~/.config/clash-verge/profiles/*.yaml` |
+| Clash Verge Rev | `~/.config/clash-verge-rev/profiles/*.yaml` |
+
+## Shadowrocket
+
+在 `[Rule]` 最前面加：
+
+```text
 DOMAIN-SUFFIX,your-company.com,DIRECT
-DOMAIN-SUFFIX,your-internal.cn,DIRECT
+DOMAIN,git.your-company.com,DIRECT
 IP-CIDR,10.0.0.0/8,DIRECT
 IP-CIDR,172.16.0.0/12,DIRECT
 IP-CIDR,192.168.0.0/16,DIRECT
 ```
 
-`[Host]` 部分（可选）：
+必要时在 `[Host]` 添加：
 
-```
+```text
 *.your-company.com = server:223.5.5.5
-*.your-internal.cn = server:119.29.29.29
+git.your-company.com = server:223.5.5.5
 ```
 
----
+## Quantumult X
 
-#### Quantumult X（iOS）
+在分流规则最前面加：
 
-分流 → 引用 → 编辑 → 分流规则最前面加：
-
-```
+```text
 host-suffix, your-company.com, direct
-host-suffix, your-internal.cn, direct
+host, git.your-company.com, direct
 ip-cidr, 10.0.0.0/8, direct
 ip-cidr, 172.16.0.0/12, direct
 ip-cidr, 192.168.0.0/16, direct
 ```
 
-> 如果开了 MitM，把内网域名从 MitM 列表里排除。
+如果开了 MitM，把内网域名从 MitM 主机列表里排除。
 
----
+## V2RayN
 
-#### V2RayN（Windows）
+在路由规则中添加 direct 出站：
 
-设置 → 路由设置 → 预路由规则集：
-
-域名规则：
 ```json
-{ "domain": ["domain:your-company.com", "domain:your-internal.cn"], "outboundTag": "direct" }
+{
+  "domain": ["domain:your-company.com", "full:git.your-company.com"],
+  "outboundTag": "direct"
+}
 ```
 
-IP 规则：
 ```json
-{ "ip": ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"], "outboundTag": "direct" }
+{
+  "ip": ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"],
+  "outboundTag": "direct"
+}
 ```
 
----
+## Validation
 
-### Step 3：验证配置
-
-配置完成并重启代理后，执行以下验证：
+让用户在重启代理后检查：
 
 ```bash
-# 检查 DNS 解析是否拿到真实 IP（不是 28.x.x.x）
 nslookup git.your-company.com
-
-# 检查 HTTP 是否可访问
 curl -I https://git.your-company.com
-
-# 如果在公司内网，ping 内网 IP
-ping 10.x.x.x
+ping <internal-ip>
 ```
 
-**判断标准：**
-- ✅ `nslookup` 返回的不是 `28.x.x.x` / `198.18.x.x` → fake-ip-filter 生效
-- ✅ `curl` 拿到 HTTP 响应 → 直连规则生效
-- ❌ 仍返回 `28.x.x.x` → 配置未生效，检查是否改错文件或未重启
+判断：
 
-## 常见问题速查
+- `nslookup` 返回真实 IP，而不是 `28.x.x.x` 或 `198.18.x.x`，说明 fake-ip 排除生效。
+- `curl` 能拿到响应，说明 DIRECT 规则生效。
+- 仍是 fake-ip 时，重点检查是否改错文件、覆写未启用、未重启客户端、域名规则不匹配。
+- 能解析但 HTTP 不通时，重点检查规则顺序、是否处于 Global 全局模式、公司网络/VPN 是否已连接。
 
-| 现象 | 原因 | 解法 |
-|------|------|------|
-| nslookup 返回 28.x.x.x | fake-ip 还在劫持内网域名 | fake-ip-filter 加内网域名 |
-| 能 ping 通但 HTTP 不通 | 流量走了代理节点 | rules 最前面加 DIRECT |
-| 改完重启还是不生效 | 改的是运行时 config.yaml | 改 profiles/ 下的源文件 |
-| 订阅更新后配置丢了 | 订阅覆盖了修改 | 改用覆写（Override）方式 |
-| 规则加了但没生效 | 规则顺序靠后 | 内网规则必须放最前面 |
-| 覆写报错 `Can't find variable: module` | FlClash 不支持 module.exports | 改用 `function main(config)` |
-| 覆写脚本没生效 | 没勾选 / 没切脚本模式 | 勾选 ● + 确认脚本模式 |
+## Troubleshooting
 
-## 注意事项
+| 现象 | 优先检查 |
+| --- | --- |
+| `nslookup` 返回 `28.x.x.x` 或 `198.18.x.x` | `fake-ip-filter` 是否包含内网域名 |
+| 能 ping 但网页或 Git 不通 | `DIRECT` 规则是否在最前面 |
+| 改完订阅更新后失效 | 是否使用了覆写而不是直改订阅 |
+| Clash 系修改无效 | 是否改的是 `profiles/` 源文件而不是运行时文件 |
+| FlClash 脚本报 `module` 相关错误 | 是否使用了 `function main(config)` |
+| 公司域名可解析但仍走代理 | 是否在 Rule 模式，规则是否被前面的代理规则截获 |
 
-- **修改前备份**：修改任何配置文件前，先备份原文件
-- **用覆写而非直改**：优先推荐覆写（Override）方式，订阅更新不丢失
-- **不要用全局模式**：确保代理软件处于「规则模式（Rule）」而非「全局模式（Global）」
-- **国内流量不走代理**：大多数订阅已内置 `GEOIP,CN,DIRECT`，国内网站不会消耗代理流量
+## Assets
 
-## 辅助材料
+`assets/` 中有可视化材料。只有当用户需要教程配图、分享图或说明页时再使用：
 
-`assets/` 目录下提供了可视化说明材料：
-
-- `assets/proxy-bypass-cover.html` — 信息图网页版（浏览器打开即可查看，包含痛点分析、三板斧流程图、踩坑速查表）
-- `assets/proxy-bypass-cover.png` — 信息图截图版（适合直接分享或嵌入文档）
-
-可作为教程配图或分享给同事时的可视化参考。
+- `assets/proxy-bypass-cover.html`
+- `assets/proxy-bypass-cover.png`

@@ -1,0 +1,7 @@
+interface:
+  display_name: "Proxy Intranet Bypass"
+  short_description: "配置代理内网直连和绕过规则"
+  default_prompt: "Use $proxy-intranet-bypass to fix intranet access after enabling a proxy client."
+
+policy:
+  allow_implicit_invocation: true
