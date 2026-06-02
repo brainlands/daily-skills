@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Proxy Bypass Infographic</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    width: 1280px;
+    height: 720px;
+    font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0d1117;
+    color: #e6edf3;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Background decorations */
+  body::before {
+    content: '';
+    position: absolute;
+    top: -200px;
+    right: -200px;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(56,139,253,0.12) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  body::after {
+    content: '';
+    position: absolute;
+    bottom: -150px;
+    left: -100px;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(163,113,247,0.10) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    padding: 40px 56px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  /* ── Header ── */
+  .header {
+    text-align: center;
+  }
+  .header h1 {
+    font-size: 36px;
+    font-weight: 900;
+    background: linear-gradient(135deg, #58a6ff 0%, #a371f7 50%, #39d2c0 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.3;
+    letter-spacing: 1px;
+  }
+  .header .subtitle {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #8b949e;
+  }
+  .tools-bar {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 14px;
+    flex-wrap: wrap;
+  }
+  .tool-tag {
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    background: rgba(56,139,253,0.12);
+    color: #58a6ff;
+    border: 1px solid rgba(56,139,253,0.25);
+  }
+
+  /* ── Pain Points ── */
+  .section-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #e6edf3;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-title .icon { font-size: 20px; }
+
+  .pain-row {
+    display: flex;
+    gap: 16px;
+  }
+  .pain-card {
+    flex: 1;
+    padding: 16px 18px;
+    border-radius: 12px;
+    background: #161b22;
+    border: 1px solid #30363d;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .pain-card .label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #e6edf3;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .pain-card .label .emoji { font-size: 18px; }
+  .pain-card .desc {
+    font-size: 12px;
+    color: #8b949e;
+  }
+  .pain-card .result {
+    font-size: 12px;
+    color: #f85149;
+    font-weight: 500;
+  }
+
+  .core-box {
+    display: flex;
+    gap: 16px;
+    margin-top: 4px;
+  }
+  .core-reason {
+    flex: 1;
+    padding: 12px 16px;
+    border-radius: 10px;
+    background: rgba(248,81,73,0.08);
+    border: 1px solid rgba(248,81,73,0.25);
+    font-size: 13px;
+    color: #f85149;
+    font-weight: 500;
+  }
+  .core-solution {
+    flex: 1;
+    padding: 12px 16px;
+    border-radius: 10px;
+    background: rgba(56,139,253,0.08);
+    border: 1px solid rgba(56,139,253,0.25);
+    font-size: 13px;
+    color: #58a6ff;
+    font-weight: 500;
+  }
+
+  /* ── Three Axes ── */
+  .axes-row {
+    display: flex;
+    gap: 16px;
+  }
+  .axis-card {
+    flex: 1;
+    padding: 20px;
+    border-radius: 14px;
+    background: #161b22;
+    border: 1px solid #30363d;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: relative;
+    overflow: hidden;
+  }
+  .axis-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+  }
+  .axis-card.blue::before { background: linear-gradient(90deg, #388bfd, #58a6ff); }
+  .axis-card.purple::before { background: linear-gradient(90deg, #8957e5, #a371f7); }
+  .axis-card.cyan::before { background: linear-gradient(90deg, #1b9e85, #39d2c0); }
+
+  .axis-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .axis-num {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .blue .axis-num { color: #58a6ff; background: rgba(56,139,253,0.12); border: 1.5px solid rgba(56,139,253,0.3); }
+  .purple .axis-num { color: #a371f7; background: rgba(163,113,247,0.12); border: 1.5px solid rgba(163,113,247,0.3); }
+  .cyan .axis-num { color: #39d2c0; background: rgba(57,210,192,0.12); border: 1.5px solid rgba(57,210,192,0.3); }
+
+  .axis-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #e6edf3;
+  }
+  .axis-key {
+    font-size: 11px;
+    color: #8b949e;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+  }
+  .axis-desc {
+    font-size: 12px;
+    color: #8b949e;
+    line-height: 1.5;
+  }
+  .axis-detail {
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: #0d1117;
+    border: 1px solid #21262d;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .blue .axis-detail { color: #58a6ff; }
+  .purple .axis-detail { color: #a371f7; }
+  .cyan .axis-detail { color: #39d2c0; }
+
+  /* ── Flowchart ── */
+  .flow-section {
+    display: flex;
+    gap: 24px;
+    align-items: stretch;
+  }
+  .flow-left {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .flow-right {
+    flex: 1.2;
+    background: #0d1117;
+    border-radius: 14px;
+    border: 1px solid #30363d;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Quick reference table */
+  .ref-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+  }
+  .ref-table th {
+    padding: 7px 10px;
+    text-align: left;
+    color: #8b949e;
+    font-weight: 600;
+    border-bottom: 1px solid #30363d;
+    background: #161b22;
+  }
+  .ref-table td {
+    padding: 6px 10px;
+    border-bottom: 1px solid #21262d;
+  }
+  .ref-table tr:nth-child(even) td { background: rgba(22,27,34,0.5); }
+  .ref-table .symptom { color: #f85149; }
+  .ref-table .cause { color: #8b949e; }
+  .ref-table .fix { color: #3fb950; font-weight: 500; }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    font-size: 13px;
+    color: #484f58;
+    padding-top: 4px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <!-- Header -->
+  <div class="header">
+    <h1>开了代理就上不了公司内网？<br>一招搞定，再也不用反复开关代理了！</h1>
+    <div class="tools-bar">
+      <span class="tool-tag">Clash</span>
+      <span class="tool-tag">FlClash</span>
+      <span class="tool-tag">Clash Verge</span>
+      <span class="tool-tag">Shadowrocket</span>
+      <span class="tool-tag">Quantumult X</span>
+      <span class="tool-tag">V2RayN</span>
+    </div>
+  </div>
+
+  <!-- Pain Points + Core Reason -->
+  <div>
+    <div class="pain-row">
+      <div class="pain-card">
+        <div class="label"><span class="emoji">🚀</span> 开代理</div>
+        <div class="desc">Google 飞起</div>
+        <div class="result">→ 公司 Git、内网文档全挂 ❌</div>
+      </div>
+      <div class="pain-card">
+        <div class="label"><span class="emoji">🏢</span> 关代理</div>
+        <div class="desc">公司内网正常</div>
+        <div class="result">→ StackOverflow 打不开 ❌</div>
+      </div>
+      <div class="pain-card">
+        <div class="label"><span class="emoji">🔄</span> 反复开关代理</div>
+        <div class="desc">人已疯</div>
+        <div class="result">→ 效率归零 ❌</div>
+      </div>
+    </div>
+    <div class="core-box" style="margin-top: 12px;">
+      <div class="core-reason">💥 核心原因：代理把内网流量也劫走了，内网请求跑到海外节点</div>
+      <div class="core-solution">💡 解决思路：让代理知道哪些是内网地址，直接放行（DIRECT）</div>
+    </div>
+  </div>
+
+  <!-- Three Axes -->
+  <div>
+    <div class="section-title"><span class="icon">🔑</span> 三板斧，斧斧致命</div>
+    <div class="axes-row">
+      <div class="axis-card blue">
+        <div class="axis-header">
+          <div class="axis-num">1</div>
+          <div>
+            <div class="axis-title">Fake IP 过滤</div>
+            <div class="axis-key">fake-ip-filter</div>
+          </div>
+        </div>
+        <div class="axis-desc">防止内网域名被分配假 IP（28.x.x.x 段），导致根本连不上</div>
+        <div class="axis-detail">将内网域名加入 fake-ip-filter 排除列表</div>
+      </div>
+      <div class="axis-card purple">
+        <div class="axis-header">
+          <div class="axis-num">2</div>
+          <div>
+            <div class="axis-title">DNS 解析策略</div>
+            <div class="axis-key">nameserver-policy</div>
+          </div>
+        </div>
+        <div class="axis-desc">让内网域名走国内 DNS 解析，拿到真实内网 IP</div>
+        <div class="axis-detail">指定 223.5.5.5（阿里）/ 119.29.29.29（腾讯）</div>
+      </div>
+      <div class="axis-card cyan">
+        <div class="axis-header">
+          <div class="axis-num">3</div>
+          <div>
+            <div class="axis-title">直连规则 DIRECT</div>
+            <div class="axis-key">rules</div>
+          </div>
+        </div>
+        <div class="axis-desc">在规则最前面加 DIRECT，让内网流量直连不走代理</div>
+        <div class="axis-detail">内网规则必须排在最前面，优先匹配</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Flowchart + Quick Ref -->
+  <div class="flow-section">
+    <div class="flow-right">
+      <svg viewBox="0 0 520 260" width="100%" height="100%">
+        <defs>
+          <marker id="ah" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
+            <polygon points="0 0, 7 2.5, 0 5" fill="#8b949e" />
+          </marker>
+          <marker id="ah-green" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
+            <polygon points="0 0, 7 2.5, 0 5" fill="#3fb950" />
+          </marker>
+        </defs>
+
+        <!-- Start -->
+        <rect x="175" y="8" width="170" height="34" rx="17" fill="rgba(56,139,253,0.12)" stroke="#388bfd" stroke-width="1.5" />
+        <text x="260" y="30" text-anchor="middle" fill="#58a6ff" font-size="13" font-weight="600">开代理 → 内网挂了</text>
+
+        <!-- Arrow -->
+        <line x1="260" y1="42" x2="260" y2="66" stroke="#8b949e" stroke-width="1.2" marker-end="url(#ah)" />
+
+        <!-- Diamond: Global? -->
+        <polygon points="260,66 370,100 260,134 150,100" fill="#161b22" stroke="#30363d" stroke-width="1.2" />
+        <text x="260" y="104" text-anchor="middle" fill="#e6edf3" font-size="11" font-weight="500">全局模式？</text>
+
+        <!-- Yes right -->
+        <line x1="370" y1="100" x2="410" y2="100" stroke="#8b949e" stroke-width="1" marker-end="url(#ah)" />
+        <text x="390" y="94" text-anchor="middle" fill="#8b949e" font-size="9">Yes</text>
+        <rect x="410" y="84" width="100" height="30" rx="6" fill="#161b22" stroke="#30363d" stroke-width="1" />
+        <text x="460" y="103" text-anchor="middle" fill="#e6edf3" font-size="10">切 Rule 模式</text>
+        <line x1="460" y1="114" x2="460" y2="146" stroke="#8b949e" stroke-width="1" marker-end="url(#ah)" />
+        <rect x="410" y="146" width="100" height="28" rx="6" fill="rgba(63,185,80,0.10)" stroke="#3fb950" stroke-width="1" />
+        <text x="460" y="164" text-anchor="middle" fill="#3fb950" font-size="10" font-weight="500">好了 ✅ 完事</text>
+
+        <!-- No / still broken back arrow -->
+        <path d="M 410,160 Q 380,180 340,190" stroke="#f85149" stroke-width="1" fill="none" stroke-dasharray="4 3" />
+        <text x="382" y="178" fill="#f85149" font-size="8">不行</text>
+
+        <!-- No down -->
+        <line x1="150" y1="100" x2="100" y2="100" stroke="#8b949e" stroke-width="1" />
+        <text x="125" y="94" text-anchor="middle" fill="#8b949e" font-size="9">No</text>
+        <line x1="100" y1="100" x2="100" y2="190" stroke="#8b949e" stroke-width="1.2" marker-end="url(#ah)" />
+
+        <!-- Main solution box -->
+        <rect x="10" y="190" width="310" height="62" rx="10" fill="rgba(56,139,253,0.06)" stroke="#388bfd" stroke-width="1.2" />
+        <text x="28" y="210" fill="#58a6ff" font-size="12" font-weight="600">改配置（三板斧）</text>
+        <text x="38" y="228" fill="#e6edf3" font-size="10">① fake-ip-filter 加内网域名</text>
+        <text x="38" y="244" fill="#e6edf3" font-size="10">② nameserver-policy 加内网 DNS    ③ rules 加 DIRECT</text>
+
+        <!-- Arrow to restart -->
+        <line x1="320" y1="222" x2="370" y2="222" stroke="#8b949e" stroke-width="1" marker-end="url(#ah)" />
+
+        <!-- Restart -->
+        <rect x="370" y="207" width="70" height="28" rx="6" fill="#161b22" stroke="#30363d" stroke-width="1" />
+        <text x="405" y="225" text-anchor="middle" fill="#e6edf3" font-size="10">重启</text>
+
+        <!-- Arrow to success -->
+        <line x1="440" y1="222" x2="465" y2="222" stroke="#3fb950" stroke-width="1.2" marker-end="url(#ah-green)" />
+
+        <!-- Success -->
+        <rect x="465" y="205" width="48" height="32" rx="10" fill="rgba(63,185,80,0.12)" stroke="#3fb950" stroke-width="1.5" />
+        <text x="489" y="225" text-anchor="middle" fill="#3fb950" font-size="12" font-weight="700">🎉</text>
+      </svg>
+    </div>
+
+    <!-- Quick reference -->
+    <div class="flow-left">
+      <div class="section-title" style="font-size:15px; margin-bottom:4px;"><span class="icon">⚡</span> 踩坑速查</div>
+      <table class="ref-table">
+        <thead>
+          <tr><th>现象</th><th>原因</th><th>解法</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="symptom">nslookup 返回 28.x.x.x</td><td class="cause">fake-ip 劫持内网域名</td><td class="fix">fake-ip-filter 加域名</td></tr>
+          <tr><td class="symptom">能 ping 但 HTTP 不通</td><td class="cause">流量走了代理节点</td><td class="fix">rules 加 DIRECT</td></tr>
+          <tr><td class="symptom">改完重启还不行</td><td class="cause">改错文件了</td><td class="fix">改 profiles/ 源文件</td></tr>
+          <tr><td class="symptom">订阅更新后配置丢了</td><td class="cause">订阅覆盖了修改</td><td class="fix">用覆写 Override</td></tr>
+          <tr><td class="symptom">规则加了没生效</td><td class="cause">规则顺序靠后</td><td class="fix">内网规则放最前面</td></tr>
+          <tr><td class="symptom">国内网站走代理</td><td class="cause">用了全局模式</td><td class="fix">切到 Rule 模式</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">能同时优雅地上外网和内网，才是打工人该有的体面 😎</div>
+</div>
+</body>
+</html>
