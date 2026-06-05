@@ -21,6 +21,10 @@
 proxy-intranet-bypass/SKILL.md
 ```
 
+### 踩坑记录
+
+- **Git 域名解析到不可达内网 IP**：公司已将 Git 从内网迁至公网，但办公网 DNS 仍返回旧内网地址（如 `10.x.x.x`），导致 Git 不可用。这不是代理配置问题，而是 DNS 解析到已废弃地址。优先恢复系统 DNS 为自动获取（DHCP 会下发公司自建 DNS），兜底方案是手动绑定 hosts 指向公网 IP。详见 [reference.md](proxy-intranet-bypass/reference.md)。
+
 ## Search Keywords
 
 代理内网, 内网直连, 开代理访问不了内网, 代理 bypass, Clash 内网不通, FlClash 内网直连, Clash Verge 内网直连, Shadowrocket 内网直连, Quantumult X 内网直连, fake-ip-filter, nameserver-policy, DIRECT, DOMAIN-SUFFIX, IP-CIDR

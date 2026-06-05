@@ -1,36 +1,38 @@
 ---
 name: proxy-intranet-bypass
-description: "Configure proxy clients so company intranet, private domains, Git servers, internal docs, OA, APIs, and RFC1918 LAN traffic go DIRECT instead of through proxy nodes. Use when users report opening Clash, FlClash, Clash Verge, Clash Verge Rev, Shadowrocket, Quantumult X, V2RayN, or similar tools makes intranet unavailable; keywords include 开代理访问不了内网, 代理内网, 内网直连, bypass, DIRECT, fake-ip-filter, nameserver-policy, rules, TUN, fake-ip, 28.x.x.x, 198.18.x.x."
+description: "Configure proxy clients to route company intranet, private domains, Git servers, internal docs, OA, APIs, and RFC1918 LAN traffic DIRECT instead of through proxy nodes. Use when users report opening Clash, FlClash, Clash Verge, Clash Verge Rev, Shadowrocket, Quantumult X, V2RayN, or similar tools makes intranet unavailable. Keywords: 开代理访问不了内网, 代理内网, 内网直连, bypass, DIRECT, fake-ip-filter, nameserver-policy, rules, TUN, fake-ip, 28.x.x.x, 198.18.x.x."
 ---
 
 # 代理内网直通配置助手
 
-帮助用户解决“开代理后访问不了公司内网”的问题。目标是让内网域名、内网 IP、公司 Git/文档/OA/API 直连，不走代理节点。
+解决"开代理后访问不了公司内网"问题，让内网域名、私网 IP 直连不走代理。
 
-## Core Pattern
+## 核心原则
 
-优先推荐“覆写/Override”方案，避免订阅更新后丢配置。只有在用户明确要直接改配置文件时，才指导修改 profile 源文件。
+优先**覆写/Override**方案，避免订阅更新后丢配置。仅当用户明确要求时才指导修改 profile 源文件。
 
-核心只处理三类配置：
+## 三类配置
+
+所有方案围绕三类配置展开：
 
 | 配置 | 目的 |
 | --- | --- |
-| `rules` / 分流规则 | 把内网域名和私网 IP 放在最前面并走 `DIRECT` |
-| `fake-ip-filter` | 避免内网域名被分配 `28.x.x.x` 或 `198.18.x.x` 假 IP |
-| `nameserver-policy` / Host | 让内网域名使用可解析到真实地址的 DNS |
+| `rules` / 分流规则 | 内网域名 + 私网 IP → `DIRECT` |
+| `fake-ip-filter` | 防止内网域名被分配假 IP（`28.x.x.x` / `198.18.x.x`） |
+| `nameserver-policy` / Host | 内网域名使用正确 DNS 解析 |
 
 ## Workflow
 
-1. 先收集缺失信息：代理软件、内网域名或域名后缀、是否使用 TUN/fake-ip、操作系统。不要询问用户已经给出的信息。
-2. 如果用户只说“内网打不开”，先给通用 DIRECT 规则和排查命令；如果给出具体软件，输出对应软件配置。
-3. 对 Clash 系工具优先给覆写方案；提醒用户规则必须放在现有规则前面。
-4. 域名规则用后缀时去掉开头的点，例如 `git.example.com` 可用 `DOMAIN-SUFFIX,example.com,DIRECT`；具体主机名可用 `DOMAIN,git.example.com,DIRECT`。
-5. 私网 IP 规则默认包含：
-   - `10.0.0.0/8`
-   - `172.16.0.0/12`
-   - `192.168.0.0/16`
-6. 让用户修改前备份配置，修改后保存、启用覆写并重启代理客户端。
-7. 最后给验证命令和判断标准。
+1. **收集信息**：代理软件、内网域名/后缀、是否 TUN/fake-ip、操作系统。不重复用户已提供的信息。
+2. **按场景输出**：
+   - 仅说"内网打不开" → 通用 DIRECT 规则 + 排查命令
+   - 给出具体软件 → 对应软件的配置方案
+3. **Clash 系优先覆写**；所有规则必须放在现有规则**最前面**。
+4. **域名规则**：后缀匹配用 `DOMAIN-SUFFIX`（去掉开头点），具体主机名用 `DOMAIN`。
+5. **私网 IP 段**（所有工具通用）：`10.0.0.0/8`、`172.16.0.0/12`、`192.168.0.0/16`。
+6. 修改前备份，修改后**保存 + 启用覆写 + 重启客户端**。
+7. 提供验证命令和判断标准。
+8. **特殊情况**：仅 Git 域名解析到不可达内网 IP → 非代理问题，见 [reference.md](reference.md)。
 
 ## Clash / FlClash / Clash Verge
 
@@ -171,37 +173,34 @@ ip-cidr, 192.168.0.0/16, direct
 }
 ```
 
-## Validation
+## Validation & Troubleshooting
 
-让用户在重启代理后检查：
+重启代理后验证：
 
 ```bash
 nslookup git.your-company.com
 curl -I https://git.your-company.com
-ping <internal-ip>
 ```
 
-判断：
-
-- `nslookup` 返回真实 IP，而不是 `28.x.x.x` 或 `198.18.x.x`，说明 fake-ip 排除生效。
-- `curl` 能拿到响应，说明 DIRECT 规则生效。
-- 仍是 fake-ip 时，重点检查是否改错文件、覆写未启用、未重启客户端、域名规则不匹配。
-- 能解析但 HTTP 不通时，重点检查规则顺序、是否处于 Global 全局模式、公司网络/VPN 是否已连接。
-
-## Troubleshooting
-
-| 现象 | 优先检查 |
+| 判断 | 说明 |
 | --- | --- |
-| `nslookup` 返回 `28.x.x.x` 或 `198.18.x.x` | `fake-ip-filter` 是否包含内网域名 |
-| 能 ping 但网页或 Git 不通 | `DIRECT` 规则是否在最前面 |
-| 改完订阅更新后失效 | 是否使用了覆写而不是直改订阅 |
-| Clash 系修改无效 | 是否改的是 `profiles/` 源文件而不是运行时文件 |
-| FlClash 脚本报 `module` 相关错误 | 是否使用了 `function main(config)` |
-| 公司域名可解析但仍走代理 | 是否在 Rule 模式，规则是否被前面的代理规则截获 |
+| `nslookup` 返回真实 IP（非 `28.x`/`198.18.x`） | fake-ip 排除生效 |
+| `curl` 拿到响应 | DIRECT 规则生效 |
+| 仍返回 fake-ip | 检查：改错文件 / 覆写未启用 / 未重启 / 域名不匹配 |
+| 能解析但 HTTP 不通 | 检查：规则顺序 / 是否 Global 模式 / 公司网络连接 |
+
+### 常见问题
+
+| 现象 | 检查项 |
+| --- | --- |
+| nslookup 返回 `28.x`/`198.18.x` | `fake-ip-filter` 是否包含内网域名 |
+| 能 ping 但网页/Git 不通 | DIRECT 规则是否在最前面 |
+| 订阅更新后失效 | 是否使用覆写而非直改订阅 |
+| Clash 系修改无效 | 是否改 `profiles/` 源文件而非运行时文件 |
+| FlClash 脚本报 `module` 错误 | 是否使用了 `function main(config)` |
+| 公司域名可解析但仍走代理 | 是否 Rule 模式，规则是否被前面截获 |
+| 仅 Git 域名解析到不可达内网 IP | 非代理问题，见 [reference.md](reference.md) |
 
 ## Assets
 
-`assets/` 中有可视化材料。只有当用户需要教程配图、分享图或说明页时再使用：
-
-- `assets/proxy-bypass-cover.html`
-- `assets/proxy-bypass-cover.png`
+`assets/` 中有可视化材料，仅当用户需要配图或分享时使用。
