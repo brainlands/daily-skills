@@ -200,6 +200,8 @@ curl -I https://git.your-company.com
 | FlClash 脚本报 `module` 错误 | 是否使用了 `function main(config)` |
 | 公司域名可解析但仍走代理 | 是否 Rule 模式，规则是否被前面截获 |
 | 仅 Git 域名解析到不可达内网 IP | 非代理问题，见 [reference.md](reference.md) |
+| 开代理后网页可访问但 git pull SSH 不通 | TUN 对 SSH 流量处理不同于 HTTPS；或 `/etc/hosts` 有重复条目。见 [reference.md](reference.md) |
+| `/etc/hosts` 同域名多条记录 | macOS 优先使用第一条匹配记录，后面的条目不生效。见 [reference.md](reference.md) |
 
 ## Assets
 
